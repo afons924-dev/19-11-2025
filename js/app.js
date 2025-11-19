@@ -1914,7 +1914,7 @@ const app = {
             // Preserve rating when updating
             averageRating: productId ? (this.products.find(p => p.id === productId)?.averageRating || 0) : 0,
             ratingCount: productId ? (this.products.find(p => p.id === productId)?.ratingCount || 0) : 0,
-            aliexpressUrl: form.aliexpressUrl.value.trim()
+            aliexpressUrl: form.aliexpressUrl ? form.aliexpressUrl.value.trim() : ''
         };
 
         try {
