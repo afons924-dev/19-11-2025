@@ -198,7 +198,7 @@ exports.aliexpressAuthRedirect = onRequest({ region: 'europe-west3', secrets: ["
         return res.status(400).send("User ID (uid) is a required query parameter.");
     }
 
-    const APP_KEY = process.env.ALIEXPRESS_APP_KEY;
+    const APP_KEY = process.env.ALIEXPRESS_APP_KEY ? process.env.ALIEXPRESS_APP_KEY.trim() : null;
     if (!APP_KEY) {
         logger.error("ALIEXPRESS_APP_KEY secret is not set.");
         return res.status(500).send("Application is not configured correctly.");
@@ -239,8 +239,8 @@ exports.aliexpressAuthCallback = onRequest({ region: 'europe-west3', secrets: ["
         }
         await stateRef.delete();
 
-        const APP_KEY = process.env.ALIEXPRESS_APP_KEY;
-        const APP_SECRET = process.env.ALIEXPRESS_APP_SECRET;
+        const APP_KEY = process.env.ALIEXPRESS_APP_KEY ? process.env.ALIEXPRESS_APP_KEY.trim() : null;
+        const APP_SECRET = process.env.ALIEXPRESS_APP_SECRET ? process.env.ALIEXPRESS_APP_SECRET.trim() : null;
         if (!APP_KEY || !APP_SECRET) {
             logger.error("ALIEXPRESS secrets are not set.");
             return res.status(500).send("Application is not configured correctly.");
@@ -298,8 +298,8 @@ exports.importAliExpressProduct = onCall({ region: 'europe-west3', secrets: ["AL
     if (!tokenDoc.exists) throw new HttpsError('failed-precondition', 'AliExpress account not connected.');
 
     let { accessToken, refreshToken, accessTokenExpiresAt } = tokenDoc.data();
-    const APP_KEY = process.env.ALIEXPRESS_APP_KEY;
-    const APP_SECRET = process.env.ALIEXPRESS_APP_SECRET;
+    const APP_KEY = process.env.ALIEXPRESS_APP_KEY ? process.env.ALIEXPRESS_APP_KEY.trim() : null;
+    const APP_SECRET = process.env.ALIEXPRESS_APP_SECRET ? process.env.ALIEXPRESS_APP_SECRET.trim() : null;
     if (!APP_KEY || !APP_SECRET) throw new HttpsError('internal', 'API secrets are not configured.');
 
     if (Date.now() >= accessTokenExpiresAt) {
