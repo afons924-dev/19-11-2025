@@ -1456,10 +1456,13 @@ const app = {
                 <h3 class="text-xl font-bold mb-4">Integração AliExpress</h3>
                 ${statusMessage}
                 <p class="text-gray-400 mb-4">Conecte sua conta de vendedor AliExpress.</p>
-                <button class="btn btn-primary" id="connect-aliexpress-btn">Conectar AliExpress</button>
+                <button class="btn btn-primary w-full mb-4" id="connect-aliexpress-btn">Conectar AliExpress</button>
                 <div class="mt-4">
-                    <input type="text" id="productIdInput" placeholder="URL do produto AliExpress" class="border px-2 py-1 mr-2">
-                    <button class="btn btn-secondary" id="importProductBtn">Importar Produto</button>
+                    <label class="block text-gray-300 mb-2" for="productIdInput">Importar Produto via URL</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="productIdInput" placeholder="URL do produto AliExpress" class="w-full p-3 rounded-md form-input">
+                        <button class="btn btn-secondary whitespace-nowrap" id="importProductBtn">Importar</button>
+                    </div>
                 </div>
                 <div id="productResult" class="mt-4"></div>
             `;
@@ -1900,16 +1903,16 @@ const app = {
         }
 
         const productData = {
-            name: form.name.value,
-            description: form.description.value,
-            price: parseFloat(form.price.value),
-            category: form.category.value.toLowerCase().trim(),
-            stock: parseInt(form.stock.value),
-            brand: form.brand.value,
-            color: form.color.value,
-            material: form.material.value,
-            tags: form.tags.value.split(',').map(tag => tag.trim()).filter(tag => tag),
-            showUrgency: form.showUrgency.checked,
+            name: form.name?.value || '',
+            description: form.description?.value || '',
+            price: parseFloat(form.price?.value || 0),
+            category: form.category?.value?.toLowerCase().trim() || '',
+            stock: parseInt(form.stock?.value || 0),
+            brand: form.brand?.value || '',
+            color: form.color?.value || '',
+            material: form.material?.value || '',
+            tags: form.tags?.value ? form.tags.value.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+            showUrgency: form.showUrgency?.checked || false,
             images: finalImageUrls, // The final array of image URLs
             // Preserve rating when updating
             averageRating: productId ? (this.products.find(p => p.id === productId)?.averageRating || 0) : 0,
@@ -2559,6 +2562,13 @@ const app = {
 
         if (docSnap.exists()) {
             this.userProfile = docSnap.data();
+
+            // Self-healing for main admin
+            if (this.user.email === 'darkdesire389@gmail.com' && !this.userProfile.isAdmin) {
+                this.userProfile.isAdmin = true;
+                await setDoc(userRef, { isAdmin: true }, { merge: true });
+            }
+
             let profileUpdated = false;
             if (!this.userProfile.wishlist) {
                 this.userProfile.wishlist = [];
