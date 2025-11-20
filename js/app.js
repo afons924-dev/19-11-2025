@@ -1453,18 +1453,41 @@ const app = {
             }
 
             aliexpressSection.innerHTML = `
-                <h3 class="text-xl font-bold mb-4">Integração AliExpress</h3>
-                ${statusMessage}
-                <p class="text-gray-400 mb-4">Conecte sua conta de vendedor AliExpress.</p>
-                <button class="btn btn-primary w-full mb-4" id="connect-aliexpress-btn">Conectar AliExpress</button>
-                <div class="mt-4">
-                    <label class="block text-gray-300 mb-2" for="productIdInput">Importar Produto via URL</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="productIdInput" placeholder="URL do produto AliExpress" class="w-full p-3 rounded-md form-input">
-                        <button class="btn btn-secondary whitespace-nowrap" id="importProductBtn">Importar</button>
+                <div class="bg-secondary p-6 rounded-lg border border-gray-700 shadow-lg">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold flex items-center gap-3">
+                            <i class="fab fa-alipay text-accent text-2xl"></i> Integração AliExpress
+                        </h3>
+                        <span class="text-xs bg-gray-700 text-gray-300 px-3 py-1 rounded-full border border-gray-600">API Global (SG)</span>
                     </div>
+
+                    ${statusMessage}
+
+                    <p class="text-gray-400 text-sm mb-6 leading-relaxed">
+                        Conecte a sua conta de vendedor AliExpress para sincronizar e importar produtos automaticamente.
+                        Certifique-se de que tem uma conta de vendedor ativa.
+                    </p>
+
+                    <button class="btn btn-primary w-full mb-8 flex items-center justify-center gap-3 py-3 text-lg" id="connect-aliexpress-btn">
+                        <i class="fas fa-link"></i> Conectar / Atualizar Token
+                    </button>
+
+                    <div class="border-t border-gray-600 pt-6">
+                        <label class="block text-gray-300 mb-3 text-sm font-bold uppercase tracking-wider" for="productIdInput">
+                            Importação Rápida
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="productIdInput" placeholder="Cole o URL do produto AliExpress aqui..." class="w-full p-3 rounded-md form-input text-sm border border-gray-600 focus:border-accent focus:ring-1 focus:ring-accent">
+                            <button class="btn btn-secondary whitespace-nowrap flex items-center justify-center gap-2" id="importProductBtn">
+                                <i class="fas fa-cloud-download-alt"></i> Importar
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3 flex items-center gap-1">
+                            <i class="fas fa-info-circle"></i> Ex: https://pt.aliexpress.com/item/100500xxxx.html
+                        </p>
+                    </div>
+                    <div id="productResult" class="mt-4 text-sm font-semibold"></div>
                 </div>
-                <div id="productResult" class="mt-4"></div>
             `;
 
             document.getElementById('connect-aliexpress-btn')?.addEventListener('click', async () => {
@@ -1873,6 +1896,8 @@ const app = {
     async handleAdminFormSubmit(e) {
         e.preventDefault();
         const form = e.target;
+
+        // Validação básica usando o método existente (que já verifica required)
         if (!this.validateForm(form)) {
             this.showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
             return;
@@ -1883,6 +1908,25 @@ const app = {
         }
 
         this.showLoading();
+
+        // Helper seguro para extrair valores do formulário
+        const getValue = (name) => {
+            const el = form.elements[name];
+            return el ? el.value.trim() : '';
+        };
+        const getNumber = (name) => {
+            const el = form.elements[name];
+            return el ? parseFloat(el.value) : 0;
+        };
+        const getInt = (name) => {
+            const el = form.elements[name];
+            return el ? parseInt(el.value) : 0;
+        };
+        const getChecked = (name) => {
+            const el = form.elements[name];
+            return el ? el.checked : false;
+        };
+
         const productId = form.id.value;
 
         let finalImageUrls = [...this.adminExistingImages];
@@ -1902,22 +1946,26 @@ const app = {
             }
         }
 
+        // Extração de tags com segurança
+        const tagsValue = getValue('tags');
+        const tagsArray = tagsValue ? tagsValue.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
         const productData = {
-            name: form.name?.value || '',
-            description: form.description?.value || '',
-            price: parseFloat(form.price?.value || 0),
-            category: form.category?.value?.toLowerCase().trim() || '',
-            stock: parseInt(form.stock?.value || 0),
-            brand: form.brand?.value || '',
-            color: form.color?.value || '',
-            material: form.material?.value || '',
-            tags: form.tags?.value ? form.tags.value.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
-            showUrgency: form.showUrgency?.checked || false,
-            images: finalImageUrls, // The final array of image URLs
+            name: getValue('name'),
+            description: getValue('description'),
+            price: getNumber('price'),
+            category: getValue('category').toLowerCase(),
+            stock: getInt('stock'),
+            brand: getValue('brand'),
+            color: getValue('color'),
+            material: getValue('material'),
+            tags: tagsArray,
+            showUrgency: getChecked('showUrgency'),
+            images: finalImageUrls,
             // Preserve rating when updating
             averageRating: productId ? (this.products.find(p => p.id === productId)?.averageRating || 0) : 0,
             ratingCount: productId ? (this.products.find(p => p.id === productId)?.ratingCount || 0) : 0,
-            aliexpressUrl: form.aliexpressUrl ? form.aliexpressUrl.value.trim() : ''
+            aliexpressUrl: getValue('aliexpressUrl')
         };
 
         try {
@@ -4299,3 +4347,4 @@ const app = {
 };
 
 document.addEventListener('DOMContentLoaded', () => app.init());
+window.app = app;

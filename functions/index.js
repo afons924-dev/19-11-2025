@@ -211,7 +211,8 @@ exports.aliexpressAuthRedirect = onRequest({ region: 'europe-west3', secrets: ["
     db.collection('aliexpress_auth_states').doc(uid).set({ nonce, createdAt: admin.firestore.FieldValue.serverTimestamp() });
 
     const encodedState = Buffer.from(JSON.stringify(state)).toString('base64');
-    const authorizationUrl = `https://oauth.aliexpress.com/authorize?response_type=code&client_id=${APP_KEY}&redirect_uri=${REDIRECT_URI}&state=${encodedState}&view=web`;
+    // UPDATED: Using api-sg.aliexpress.com for global apps
+    const authorizationUrl = `https://api-sg.aliexpress.com/oauth/authorize?response_type=code&client_id=${APP_KEY}&redirect_uri=${REDIRECT_URI}&state=${encodedState}&view=web`;
 
     logger.info(`Redirecting to AliExpress for authorization: ${authorizationUrl}`);
     res.redirect(authorizationUrl);
@@ -246,7 +247,8 @@ exports.aliexpressAuthCallback = onRequest({ region: 'europe-west3', secrets: ["
             return res.status(500).send("Application is not configured correctly.");
         }
 
-        const TOKEN_URL = 'https://api.aliexpress.com/rest/auth/token/create';
+        // UPDATED: Using api-sg.aliexpress.com for global apps
+        const TOKEN_URL = 'https://api-sg.aliexpress.com/rest/auth/token/create';
         const response = await axios.post(TOKEN_URL, null, {
             params: {
                 client_id: APP_KEY, client_secret: APP_SECRET, code, grant_type: 'authorization_code',
@@ -305,7 +307,8 @@ exports.importAliExpressProduct = onCall({ region: 'europe-west3', secrets: ["AL
     if (Date.now() >= accessTokenExpiresAt) {
         logger.info('Access token expired, refreshing...');
         try {
-            const response = await axios.post('https://api.aliexpress.com/rest/auth/token/refresh', null, {
+            // UPDATED: Using api-sg.aliexpress.com for global apps
+            const response = await axios.post('https://api-sg.aliexpress.com/rest/auth/token/refresh', null, {
                 params: { client_id: APP_KEY, client_secret: APP_SECRET, refresh_token: refreshToken, grant_type: 'refresh_token' }
             });
 
@@ -334,7 +337,8 @@ exports.importAliExpressProduct = onCall({ region: 'europe-west3', secrets: ["AL
         const signString = Object.keys(params).sort().map(key => key + params[key]).join('');
         params.sign = crypto.createHmac('sha256', APP_SECRET).update(signString).digest('hex').toUpperCase();
 
-        const response = await axios.get('https://api.aliexpress.com/rest', { params });
+        // UPDATED: Using api-sg.aliexpress.com for global apps
+        const response = await axios.get('https://api-sg.aliexpress.com/rest', { params });
         const result = response.data.aliexpress_ds_product_get_response?.result;
         if (!result) {
             logger.error("Error fetching product from AliExpress:", response.data);
